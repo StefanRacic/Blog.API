@@ -32,7 +32,7 @@ namespace Blog.API.Controllers
 
         // Get Users Blogs
         [HttpGet("myBlogs")]
-        public async Task<IActionResult> get()
+        public async Task<IActionResult> Get()
         {
             // Users ID
             var userId = GetUsersId();
@@ -45,7 +45,7 @@ namespace Blog.API.Controllers
 
         // Get All Blogs
         [HttpGet]
-        public async Task<IActionResult> getAll()
+        public async Task<IActionResult> GetAll()
         {
             var blogs = await _repo.GetAllBlogs();
 
@@ -53,9 +53,20 @@ namespace Blog.API.Controllers
 
         }
 
+        // Get Specific Blog
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBlog(int id)
+        {
+            var blog = await _repo.GetBlog(id);
+            if (blog == null)
+                return BadRequest("No such blog");
+
+            return Ok(blog);
+        }
+
 
         [HttpPost]
-        public async Task<IActionResult> add(BlogItemDto blogItemDto)
+        public async Task<IActionResult> Add(BlogItemDto blogItemDto)
         {
             // Users ID
             await _repo.AddBlog(blogItemDto);
@@ -65,8 +76,7 @@ namespace Blog.API.Controllers
         }
 
         [HttpPut("{id}")]
-
-        public async Task<IActionResult> put(int id, BlogItemDto blogItemDto)
+        public async Task<IActionResult> Put(int id, BlogItemDto blogItemDto)
         {
             // Users ID
             var userId = GetUsersId();
@@ -83,7 +93,7 @@ namespace Blog.API.Controllers
 
         [HttpDelete("{id}")]
 
-        public async Task<IActionResult> delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var blogToDelete = await _context.Blogs.FindAsync(id);
 

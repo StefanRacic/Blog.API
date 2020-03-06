@@ -1,4 +1,6 @@
-﻿using Blog.API.Models;
+﻿using AutoMapper;
+using Blog.API.Dtos;
+using Blog.API.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,30 +15,35 @@ namespace Blog.API.Data
         private readonly DataContext _context;
         private readonly RoleManager<Role> _roleManager;
         private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
+        private readonly SignInManager<User> _signInManager;
 
-        public AuthRepository(DataContext context, RoleManager<Role> roleManager, UserManager<User> userManager)
+        public AuthRepository(DataContext context, RoleManager<Role> roleManager, UserManager<User> userManager, IMapper mapper, SignInManager<User> signInManager)
         {
             _context = context;
             _roleManager = roleManager;
             _userManager = userManager;
+            _mapper = mapper;
+            _signInManager = signInManager;
         }
-        public async Task<User> Login(string email, string password)
+        public async Task<UserForLoginDto> Login(UserForLoginDto userForLoginDto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null)
+            throw new NotImplementedException();
+        }
+
+        public async Task<UserForRegisterDto> Register(UserForRegisterDto userForRegisterDto)
+        {
+            var userInDbEmail = await _context.Users.AnyAsync(u => u.Email == userForRegisterDto.Email);
+            var userInDbUsername = await _context.Users.AnyAsync(u => u.UserName == userForRegisterDto.UserName);
+            if (userInDbEmail || userInDbUsername)
             {
                 return null;
             }
+            else
+            {
 
-            return user;
-        }
-
-        public async Task<User> Register(User user, string password)
-        {
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-
-            return user;
+                return userForRegisterDto;
+            }
         }
 
         public async Task<bool> UserExists(string email)

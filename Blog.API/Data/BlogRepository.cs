@@ -45,6 +45,18 @@ namespace Blog.API.Data
             return blogItemDto;
         }
 
+        public async Task<BlogItemDto> GetBlog(int id)
+        {
+            var blogToShow = await _context.Blogs.FindAsync(id);
+            if (blogToShow == null)
+                return null;
+            else
+            {
+                var blogToReturn = _mapper.Map<BlogItemDto>(blogToShow);
+                return blogToReturn;
+            }
+        }
+
 
         public async Task<BlogItemDto> Delete(int id, int userId)
         {
@@ -66,7 +78,7 @@ namespace Blog.API.Data
         public async Task<BlogItemDto> Update(int id, BlogItemDto updatedblogItemDto)
         {
             var updatedBlog = _mapper.Map<BlogItem>(updatedblogItemDto);
-            
+
             _context.Blogs.Update(updatedBlog);
             await _context.SaveChangesAsync();
 

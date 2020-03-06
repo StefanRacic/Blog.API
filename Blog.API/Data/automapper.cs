@@ -18,6 +18,10 @@ namespace Blog.API.Data
                 CreateMap<BlogItem, BlogItemDto>();
                 CreateMap<UserDto, User>();
                 CreateMap<User, UserDto>();
+                CreateMap<User, UserForRegisterDto>();
+                CreateMap<UserForRegisterDto, User>();
+                CreateMap<User, UserForLoginDto>();
+                CreateMap<UserForLoginDto, User>();
             }
         }
     }

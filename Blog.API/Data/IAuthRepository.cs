@@ -1,4 +1,5 @@
-﻿using Blog.API.Models;
+﻿using Blog.API.Dtos;
+using Blog.API.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +9,8 @@ namespace Blog.API.Data
 {
     public interface IAuthRepository
     {
-        Task<User> Register(User user, string password);
-        Task<User> Login(string email, string password);
+        Task<UserForRegisterDto> Register(UserForRegisterDto userForRegisterDto);
+        Task<UserForLoginDto> Login(UserForLoginDto userForLogin);
         Task<bool> UserExists(string email);
     }
 }

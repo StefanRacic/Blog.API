@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using Blog.API.Data;
 using Blog.API.Dtos;
 using Blog.API.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Blog.API.Controllers
 {
@@ -26,13 +25,15 @@ namespace Blog.API.Controllers
         private readonly IConfiguration _config;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signIngManager;
+        private readonly IMapper _mapper;
 
-        public UsersController(IAuthRepository repo, IConfiguration config, UserManager<User> userManager, SignInManager<User> signIngManager)
+        public UsersController(IAuthRepository repo, IConfiguration config, UserManager<User> userManager, SignInManager<User> signIngManager, IMapper mapper)
         {
             _repo = repo;
             _config = config;
             _userManager = userManager;
             _signIngManager = signIngManager;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -40,7 +41,7 @@ namespace Blog.API.Controllers
         {
             bool isAuthenticated = User.Identity.IsAuthenticated;
             string role = User.IsInRole("Admin") ? "Admin" : "User";
-            
+
 
             if (isAuthenticated)
                 return Ok(new { User.Identity.Name, role, id = GetUsersId() });
@@ -50,23 +51,22 @@ namespace Blog.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> register(UserForRegisterDto userForRegisterDto)
         {
-            var userToCreate = new User
-            {
-                Email = userForRegisterDto.Email,
-                UserName = userForRegisterDto.UserName,
-            };
-            var result = await _userManager.CreateAsync(userToCreate, userForRegisterDto.Password);
+            var result = await _repo.Register(userForRegisterDto);
 
-            if (result.Succeeded)
+            if (result == null)
             {
-                await _userManager.AddToRoleAsync(userToCreate, "User");
+                return BadRequest("User already Exists");
+            }
+            else
+            {
+                var user = _mapper.Map<User>(result);
+                await _userManager.CreateAsync(user, userForRegisterDto.Password);
+                await _userManager.AddToRoleAsync(user, "User");
                 return Ok(new
                 {
-                    token = await GenerateJwtToken(userToCreate)
+                    token = await GenerateJwtToken(user),
                 });
-            }
-
-            return BadRequest(result.Errors);
+            };
         }
 
         [HttpPost("login")]
@@ -89,6 +89,19 @@ namespace Blog.API.Controllers
             }
 
             return BadRequest("Wrong Password");
+
+            //var result = await _repo.Login(userForLoginDto);
+            //var user = _mapper.Map<User>(result);
+
+            //var userLogin = await _signIngManager.CheckPasswordSignInAsync(user, userForLoginDto.Password, false);
+            //if (userLogin.Succeeded)
+            //{
+            //    return Ok(new
+            //    {
+            //        token = await GenerateJwtToken(user),
+            //    });
+            //}
+            //return BadRequest("Wrong Email or Password");
         }
 
         private async Task<string> GenerateJwtToken(User user)
